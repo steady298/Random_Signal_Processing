@@ -8,7 +8,7 @@
 <style>
   :root{--bg:#0b1220; --panel:#0f1724; --text:#e6eef8; --muted:#9aa9bd; --accent:#60a5fa}
   html,body{height:100%;margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
-  .app{display:grid;grid-template-columns:360px 1fr; gap:18px; padding:20px; height:100vh; box-sizing:border-box}
+  .app{display:grid;grid-template-columns:2fr 1fr; gap:18px; padding:20px; height:100vh; box-sizing:border-box}
   .sidebar{background:var(--panel); border-radius:12px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,0.3); overflow:auto}
   .main{background:var(--panel); border-radius:12px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,0.3); overflow:auto}
   h1{margin:0 0 12px;font-size:18px}
@@ -16,8 +16,8 @@
   button,select{background:var(--accent); color:white; border:0; padding:6px 10px; border-radius:8px; cursor:pointer}
   button.ghost{background:transparent;color:var(--accent); border:1px solid rgba(0,0,0,0.3)}
   .small{padding:4px 6px;font-size:13px}
-  .codewrap{border-radius:8px; overflow:auto; border:1px solid rgba(255,255,255,0.1); margin-top:8px}
-  pre{margin:0; padding:16px; font-size:13px; line-height:1.45}
+  .codewrap{border-radius:8px; overflow:auto; border:1px solid rgba(255,255,255,0.1); margin-top:8px; height:calc(100% - 60px);}
+  pre{margin:0; padding:16px; font-size:13px; line-height:1.45; height:100%;}
   .thumbs{display:flex; gap:12px; flex-wrap:wrap; margin-top:12px}
   .thumb{width:260px; border-radius:8px; overflow:hidden; background:#1a1f30; box-shadow:0 6px 14px rgba(0,0,0,0.3); cursor:pointer}
   .thumb img{width:100%; height:160px; object-fit:contain; background:linear-gradient(180deg,#1a1f30,#0f1724)}
@@ -27,9 +27,10 @@
   #overlay img{max-width:90%; max-height:90%; border-radius:8px;}
   @media(max-width:900px){
     .app{grid-template-columns:1fr; padding:12px; height:auto}
-    .sidebar{order:2; margin-bottom:12px}
+    .sidebar{order:2; margin-bottom:12px; height:auto}
     .main{order:1}
     .thumb{width:48%}
+    .codewrap{height:auto}
   }
   @media(max-width:500px){
     .thumb{width:100%}
@@ -62,7 +63,6 @@
     <div class="thumbs" id="thumbs"></div>
   </main>
 </div>
-<!-- 图片放大遮罩 -->
 <div id="overlay"><img id="overlayImg" src="" alt="放大图"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/matlab.min.js"></script>
@@ -76,7 +76,6 @@ const experimentSelect = document.getElementById('experimentSelect');
 const overlay = document.getElementById('overlay');
 const overlayImg = document.getElementById('overlayImg');
 
-// 多实验代码示例
 const experimentCodes = [
 `%%=========================================================
 %  随机信号分析：经典功率谱估计（直接法 vs 自相关法）
@@ -223,7 +222,7 @@ title('经典功率谱估计下频率估计误差随SNR变化', 'FontSize', 13, 
 xlabel('SNR (dB)', 'FontSize', 12);
 ylabel('Mean Square Error (MSE)', 'FontSize', 12);
 legend('Location','northeast');
-set(gca, 'FontName','Times New Roman', 'FontSize', 11);
+
 `,
 `%%===============================================================
 %  随机信号分析：经典功率谱估计下的 RMSE–SNR 关系（SNR控制版）
@@ -313,10 +312,8 @@ ylabel('Root Mean Square Error (RMSE)', 'FontSize', 12);
 legend('Location','northeast');
 
 `,
-`% 实验四 MATLAB代码示例\nt=0:0.01:10;plot(t,sin(t));`
+`% 实验四代码示例`
 ];
-
-// 每个实验固定图片路径
 const experimentImages = [
   ['images/exp1_1.png','images/exp1_2.png'],
   ['images/exp2_1.png'],
@@ -333,34 +330,16 @@ function loadExperiment(idx){
     div.innerHTML=`<img src='${path}' alt='result'><div class='cap'>${path.split('/').pop()}</div>`;
     thumbs.appendChild(div);
   });
-  // 添加点击放大事件
   document.querySelectorAll('.thumb img').forEach(img=>{
-    img.onclick = ()=>{
-      overlayImg.src = img.src;
-      overlay.style.display='flex';
-    };
+    img.onclick = ()=>{ overlayImg.src = img.src; overlay.style.display='flex'; };
   });
 }
 
 experimentSelect.addEventListener('change',e=>{ loadExperiment(e.target.value); });
 loadExperiment(0);
-
-// 点击空白关闭放大
 overlay.addEventListener('click',()=>{ overlay.style.display='none'; overlayImg.src=''; });
-
-// 复制代码
-copyBtn.addEventListener('click',async()=>{
-  try{ await navigator.clipboard.writeText(codeBlock.innerText); copyBtn.textContent='已复制'; setTimeout(()=>copyBtn.textContent='复制',1200); }
-  catch(e){ alert('复制失败，请手动 Ctrl+C'); }
-});
-
-// 下载 .m 文件
-downloadBtn.addEventListener('click',()=>{
-  const blob = new Blob([codeBlock.innerText],{type:'text/plain'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url;a.download='script.m';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
-  downloadBtn.textContent='已下载'; setTimeout(()=>downloadBtn.textContent='下载.m',1200);
-});
+copyBtn.addEventListener('click',async()=>{ try{ await navigator.clipboard.writeText(codeBlock.innerText); copyBtn.textContent='已复制'; setTimeout(()=>copyBtn.textContent='复制',1200); } catch(e){ alert('复制失败'); } });
+downloadBtn.addEventListener('click',()=>{ const blob = new Blob([codeBlock.innerText],{type:'text/plain'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url;a.download='script.m';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url); downloadBtn.textContent='已下载'; setTimeout(()=>downloadBtn.textContent='下载.m',1200); });
 </script>
 </body>
 </html>
